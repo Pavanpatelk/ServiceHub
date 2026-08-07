@@ -1,0 +1,329 @@
+===============================================================================
+                       SERVICEHUB — PROJECT DOCUMENTATION
+===============================================================================
+                         (Simplified & Comprehensive Guide)
+
+-------------------------------------------------------------------------------
+1. WHAT IS SERVICEHUB? (OVERVIEW & PURPOSE)
+-------------------------------------------------------------------------------
+ServiceHub is an online web application that connects local customers with 
+skilled service professionals (like plumbers, electricians, painters, AC repair 
+technicians, beauty experts, and tutors).
+
+It makes it easy for customers to find nearby service providers, check their 
+availability, schedule appointments, send photos of their problem, negotiate 
+pricing, chat in real-time, pay for services, and leave ratings and reviews.
+
+Target Users & What They Do:
+1. CUSTOMERS:
+   - Search for service providers by city, category, or rating.
+   - Book appointments by picking a date, time, and entering their address.
+   - Upload photos of their repair problem (e.g. broken pipe or leaking AC).
+   - Pay using Cash, Credit/Debit Card, or UPI.
+   - Chat live with the service provider.
+   - Leave 1-to-5 star ratings and reviews after job completion.
+
+2. SERVICE PROVIDERS (PROFESSIONALS):
+   - Set up a profile listing their skills, city, bio, and experience.
+   - Set their own prices (Hourly rate or Fixed charge per job).
+   - Define weekly working days and working hours.
+   - Accept, complete, or decline incoming customer job requests.
+   - Upload portfolio photos of past completed work.
+   - Track monthly earnings and job performance analytics.
+
+3. SYSTEM ADMINISTRATORS (ADMINS / STAFF):
+   - Monitor total platform users, bookings, and gross earnings.
+   - View automatically calculated platform earnings (10% commission share).
+   - Verify newly registered service providers.
+   - Block or unblock user accounts if abuse occurs.
+   - Manage the master list of service categories.
+
+
+-------------------------------------------------------------------------------
+2. HOW THE SYSTEM WORKS (TECHNOLOGY MADE SIMPLE)
+-------------------------------------------------------------------------------
+ServiceHub is built using two main parts working together:
+
+A. FRONTEND (The User Interface you see on your screen)
+   - Built with: React 18 and Vite.
+   - Design & Icons: Clean modern CSS, Tailwind CSS, and Lucide React icons.
+   - Charts: Recharts (used in Admin & Provider dashboards for visual graphs).
+   - Purpose: Provides fast, smooth pages that load without refreshing the browser.
+
+B. BACKEND (The Brain & Server operating behind the scenes)
+   - Built with: Python 5 & Django REST Framework (DRF).
+   - Server Engine: Daphne (ASGI server) for handling both normal website requests 
+     and live instant messages.
+   - Database: PostgreSQL (or SQLite for easy local testing).
+   - Purpose: Processes user signups, stores bookings, checks security permissions, 
+     and calculates payments.
+
+C. INSTANT MESSAGING (WebSockets / Django Channels)
+   - Unlike standard websites that require refreshing to see new messages, 
+     ServiceHub uses "WebSockets". This creates an open connection between the 
+     customer and provider so chat messages appear instantly.
+
+D. EMAIL SERVICE (Gmail Integration)
+   - Automatically sends 6-digit One-Time Password (OTP) verification codes to 
+     user emails for account activation and password resets.
+
+
+-------------------------------------------------------------------------------
+3. DATABASE STRUCTURE (WHAT INFORMATION IS SAVED)
+-------------------------------------------------------------------------------
+The database is divided into two main sections: Accounts and Services.
+
+--- ACCOUNTS DATA ---
+1. CustomUser (User Account Information):
+   - Stores username, email, password, gender, and birth date.
+   - Contains flags showing whether the user is a Customer, Provider, or Admin.
+   - Stores 6-digit OTP codes and expiration timestamps for email verification 
+     and password resets.
+
+2. CustomerProfile:
+   - Stores customer-specific details such as phone number.
+
+3. ProviderProfile:
+   - Stores provider bio, phone number, operating city, working hours, 
+     skills list, years of experience, and verification badge status.
+   - GPS Coordinates: Automatically assigns latitude and longitude based on 
+     26 major Indian cities (Mumbai, Delhi, Bengaluru, Pune, Ahmedabad, etc.) 
+     so providers appear on location maps.
+
+4. ProviderGalleryImage:
+   - Stores portfolio photos uploaded by providers showcasing past work.
+
+--- SERVICES DATA ---
+5. Category:
+   - Main grouping for services (e.g., Home Services, Personal & Beauty, 
+     IT & Digital, Vehicle Services).
+
+6. Service:
+   - Specific service under a category (e.g., Web Developer, Plumber, Electrician).
+   - default_pricing_type: Defines the standard billing method suitable for the profession 
+     (e.g., 'fixed' for Web Developer, Graphic Designer, CCTV, Painter, Salon, Spa; 
+      'hourly' for Plumber, Electrician, Home Tutor, Fitness Trainer).
+
+7. ProviderService:
+   - Connects a Provider to a specific Service along with their price and profession-appropriate 
+     pricing metric (Hourly rate or Fixed price).
+
+8. Booking:
+   - Stores job contract between Customer and Provider.
+   - Contains scheduled date & time, customer address, problem photo, notes, 
+     status (Pending, Accepted, Completed, Cancelled), payment status (Paid, Unpaid), 
+     and payment method (Card, Cash, UPI).
+
+9. Review:
+   - Stores 1-to-5 star rating and written review given by a customer for a 
+     completed booking.
+
+10. Message:
+    - Stores live chat messages linked to a specific booking thread.
+
+11. Notification:
+    - Stores system alerts sent to users (e.g. "Your booking was accepted!").
+
+12. ProviderAvailability:
+    - Stores weekly availability slots for providers (Monday through Sunday).
+
+
+-------------------------------------------------------------------------------
+4. SECURITY, LOGIN & AUTHENTICATION (HOW USER ACCESS IS PROTECTED)
+-------------------------------------------------------------------------------
+1. User Registration & Email OTP Verification:
+   - When a user signs up, an account is created in unverified state.
+   - A 6-digit verification code (OTP) is sent to their email.
+   - The user enters the OTP within 2 minutes to activate their account.
+
+2. Password Reset Flow:
+   - If a user forgets their password, they request a password reset OTP.
+   - A 6-digit code valid for 5 minutes is sent to their email.
+   - Entering the correct code lets the user create a new password.
+
+3. Google Login (One-Click Sign In):
+   - Users can sign in using their Google account. The system securely verifies 
+     the Google token and automatically creates an account if it's their first time.
+
+4. Secure Tokens (JWT):
+   - When users log in, they receive a secure digital pass called a "JSON Web Token" (JWT).
+   - This pass is automatically attached to every server request so the system 
+     knows who is logged in and what permissions they have.
+
+5. Role Switching:
+   - Users who are registered as both customer and provider can toggle between 
+     Customer Mode and Provider Mode with a single click.
+
+
+-------------------------------------------------------------------------------
+5. COMPLETE LIST OF API ENDPOINTS (SERVER LINKS)
+-------------------------------------------------------------------------------
+
+--- USER & AUTHENTICATION ENDPOINTS ---
+- POST   /api/accounts/register/             -> Create a new account
+- POST   /api/accounts/token/                -> Log in with username/password
+- POST   /api/accounts/token/refresh/        -> Refresh login session token
+- POST   /api/accounts/google-login/         -> Log in with Google
+- POST   /api/accounts/verify-email/         -> Verify email using 6-digit OTP
+- POST   /api/accounts/resend-verification/  -> Resend email OTP code
+- POST   /api/accounts/forgot-password/      -> Request password reset OTP
+- POST   /api/accounts/reset-password/       -> Set new password using OTP
+- POST   /api/accounts/switch-role/          -> Switch between Customer and Provider mode
+- GET/PUT /api/accounts/profile/             -> View/Edit provider profile
+- GET/PUT /api/accounts/customer-profile/   -> View/Edit customer profile
+- POST/DEL /api/accounts/gallery/            -> Upload or delete portfolio photos
+- GET    /api/accounts/providers/<id>/public/ -> View public provider page
+- PUT    /api/accounts/change-password/      -> Change logged-in user password
+
+--- SERVICES & BOOKING ENDPOINTS ---
+- GET    /api/services/categories/           -> List all service categories
+- GET/POST /api/services/provider/services/  -> List or add services offered by provider
+- DELETE /api/services/provider/services/<id>/ -> Remove a service from provider list
+- GET    /api/services/provider/analytics/  -> View provider earnings & job counts
+- GET    /api/services/search/               -> Search providers by city, rating, service
+- GET/POST /api/services/bookings/           -> View bookings or place a new booking
+- PATCH  /api/services/bookings/<id>/status/ -> Accept, complete, or cancel a booking
+- POST   /api/services/bookings/<id>/pay/    -> Pay for a booking (Card, Cash, UPI)
+- POST   /api/services/reviews/              -> Post a rating & review
+- GET    /api/services/provider/reviews/     -> View reviews received by provider
+- GET/POST /api/services/messages/           -> Fetch or send chat messages
+- DELETE /api/services/messages/<id>/delete/ -> Delete a chat message
+- DELETE /api/services/messages/clear/<booking_id>/ -> Clear entire chat history
+- GET    /api/services/conversations/        -> List active user chat conversations
+- GET/DEL /api/services/notifications/       -> Manage user notifications
+- GET/POST /api/services/availability/       -> Set provider weekly schedule
+
+--- ADMIN MANAGEMENT ENDPOINTS ---
+- GET    /api/accounts/admin/stats/          -> Financial stats & 10% commission
+- GET    /api/accounts/admin/providers/      -> List all service providers
+- PATCH  /api/accounts/admin/providers/<id>/verify/ -> Verify a provider profile
+- GET    /api/accounts/admin/bookings/       -> List all bookings system-wide
+- GET/POST /api/accounts/admin/categories/   -> Add or list master categories
+- DELETE /api/accounts/admin/categories/<id>/ -> Delete a category
+- POST   /api/accounts/admin/services/       -> Add a service under a category
+- DELETE /api/accounts/admin/services/<id>/  -> Delete a service
+- GET    /api/accounts/admin/users/          -> List all users
+- PATCH  /api/accounts/admin/users/<id>/toggle-active/ -> Block or unblock a user account
+
+
+-------------------------------------------------------------------------------
+6. FRONTEND PAGES & USER EXPERIENCE
+-------------------------------------------------------------------------------
+1. LANDING PAGE:
+   - Clean welcome page featuring a search bar, category cards, how-it-works 
+     guide, customer reviews, and registration buttons.
+
+2. LOGIN & SIGNUP PAGES:
+   - Modern tabbed login cards for Customers and Providers with Google 
+     Sign-In buttons and interactive OTP verification popups.
+
+3. CUSTOMER DASHBOARD:
+   - Search & Filter: Search by service, city, rating, or pricing mode.
+   - Easy Booking: Interactive booking modal with date selection, address 
+     input, and problem photo attachment.
+   - Active & Past Bookings: Filter bookings by status (Pending, Accepted, 
+     Completed, Cancelled).
+   - Payment Popup: Pay via Card, UPI, or Cash on Service.
+   - Real-Time Chat: Chat directly with the assigned provider.
+   - Review Popup: Rate the provider after service completion.
+
+4. PROVIDER DASHBOARD:
+   - Services Catalog: Select which services you offer and set prices.
+   - Schedule Manager: Set working days and working hours.
+   - Job Requests Inbox: View incoming customer jobs, view problem photos, and 
+     accept or decline jobs.
+   - Earnings Analytics: Visual graphs showing monthly income and job statistics.
+   - Portfolio Gallery: Upload showcase pictures of past jobs.
+
+5. ADMIN DASHBOARD:
+   - Overview Cards: Total users, providers, customers, bookings, gross revenue, 
+     and 10% platform commission earnings.
+   - Visual Charts: Monthly income trends and category leaderboards.
+   - Provider Verification: Verify legitimate providers with one click.
+   - Account Management: Block abusive accounts or unblock accounts.
+   - Category Manager: Add/Delete categories and service items.
+
+
+-------------------------------------------------------------------------------
+7. FINANCIAL SYSTEM & PLATFORM COMMISSIONS
+-------------------------------------------------------------------------------
+- Every completed booking adds to the platform's gross revenue.
+- ServiceHub automatically calculates a 10% platform commission on completed 
+  jobs:
+  Formula: Platform Commission = Completed Bookings Total Revenue * 0.10
+- Example: If completed bookings equal ₹10,000, the platform commission share 
+  is ₹1,000.
+
+
+-------------------------------------------------------------------------------
+8. HOW TO RUN THE PROJECT (SIMPLE STEP-BY-STEP GUIDE)
+-------------------------------------------------------------------------------
+
+PREREQUISITES:
+- Install Python (v3.10 or newer)
+- Install Node.js (v18 or newer)
+
+--- STEP 1: START THE BACKEND (SERVER) ---
+1. Open terminal and go to the backend folder:
+   cd backend
+
+2. Create a virtual environment:
+   Windows: python -m venv venv
+   Mac/Linux: python3 -m venv venv
+
+3. Activate the virtual environment:
+   Windows: venv\Scripts\activate
+   Mac/Linux: source venv/bin/activate
+
+4. Install python packages:
+   pip install -r requirements.txt
+
+5. Setup database migrations:
+   python manage.py migrate
+
+6. Seed sample service categories:
+   python manage.py seed_services
+
+7. Start the backend server:
+   python manage.py runserver
+
+   (The backend server will run at http://localhost:8000/)
+
+--- STEP 2: START THE FRONTEND (WEBSITE) ---
+1. Open a second terminal window and go to the frontend folder:
+   cd frontend
+
+2. Install node packages:
+   npm install
+
+3. Start the frontend website:
+   npm run dev
+
+   (The website will open at http://localhost:5173/)
+
+
+-------------------------------------------------------------------------------
+9. TESTING & QUALITY ASSURANCE
+-------------------------------------------------------------------------------
+- Backend Unit Tests: The project includes 26 passing automated tests covering 
+  registration, login, OTP verification, booking creation, status updates, 
+  admin permissions, and Google login.
+  To run tests:
+  cd backend
+  python manage.py test
+
+- Frontend Build Check: Verified using Vite production bundler:
+  cd frontend
+  npm run build
+
+
+-------------------------------------------------------------------------------
+10. FRIENDLY ERROR HANDLING
+-------------------------------------------------------------------------------
+- The website uses a smart error helper (`parseApiError`) that converts confusing 
+  technical server errors into clear, friendly messages (e.g. "Invalid verification 
+  code. Please try again" or "Session expired. Please log in again").
+
+===============================================================================
+                    End of ServiceHub Documentation File
+===============================================================================
